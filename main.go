@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"github.com/filmil/k8s-oidc-helper/internal/helper"
+	"github.com/filmil/k8s-oidc-helper/internal/oidc"
 	flag "github.com/spf13/pflag"
 	viper "github.com/spf13/viper"
 )
 
 func main() {
-	var config Config
+	var config oidc.Config
 	flag.BoolVarP(&config.Version, "version", "v", false, "Print version and exit")
 	flag.BoolVarP(&config.Open, "open", "o", true, "Open the oauth approval URL in the browser")
 	flag.StringVar(&config.ClientID, "client-id", "", "The ClientID for the application")
@@ -20,7 +21,7 @@ func main() {
 	flag.BoolVarP(&config.Write, "write", "w", false, "Write config to file. Merges in the specified file")
 	flag.StringVar(&config.KubeconfigFile, "file", "", "The file to write to. If not specified, `~/.kube/config` is used")
 
-	var urlTpl UrlValues
+	var urlTpl oidc.UrlValues
 	flag.StringVar(&urlTpl.URLPath, "oauth-url", "https://accounts.google.com/o/oauth2/auth", "The identity provider URL")
 	flag.StringVar(&urlTpl.Scope, "scope", "openid+email+profile", "The scope to request from the identity provider")
 
@@ -35,7 +36,7 @@ func main() {
 
 	flag.Parse()
 
-	if err := Run(config, urlTpl, endpoints); err != nil {
+	if err := oidc.Run(config, urlTpl, endpoints); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
