@@ -1,4 +1,6 @@
-package main
+// Package oidc encapsulates the client-side (Relying Party) flow that can be
+// used to obtain OIDC token ID from an OIDC IDP.
+package oidc
 
 import (
 	"bufio"
