@@ -14,7 +14,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/filmil/k8s-oidc-helper/internal/helper"
+	"github.com/filmil/k8s-oidc-helper/pkg/helper"
 	"github.com/ghodss/yaml"
 	k8s_runtime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
