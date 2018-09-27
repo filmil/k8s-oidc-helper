@@ -21,11 +21,11 @@
 #  version = "2.4.0"
 
 
-[[constraint]]
+[[override]]
   name = "github.com/ogier/pflag"
   version = "0.0.1"
 
-[[constraint]]
+[[override]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
 
