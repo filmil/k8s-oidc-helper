@@ -55,22 +55,28 @@ type Config struct {
 
 	// KubeconfigFile is a kubeconfig file to write to.
 	KubeconfigFile string
+
+	// AuthInfoPrefix is the prefix for the resulting written out AuthInfo
+	// record.  For example, for user with email user@example.com, and this
+	// field set to "oidc:", the returned value will be "oidc:user@example.com"
+	AuthInfoPrefix string
 }
 
-// Run goes through the OIDC flow for the user.
-func Run(config Config, urlTpl UrlValues, endpoints helper.Endpoints) error {
+// Run goes through the OIDC flow for the user.  Returns the name of the AuthInfo
+// record that has been written for the user, typically derived from their email
+// address.
+func Run(config Config, urlTpl UrlValues, endpoints helper.Endpoints) (authInfoName string, err error) {
 	urlTpl.Scope = url.PathEscape(urlTpl.Scope)
 	if config.Version {
 		fmt.Printf("k8s-oidc-helper %s\n", Version)
-		return nil
+		return
 	}
 
 	var gcf *helper.GoogleConfig
-	var err error
 	if configFile := config.ConfigFile; len(configFile) > 0 {
 		gcf, err = helper.ReadConfig(configFile)
 		if err != nil {
-			return fmt.Errorf("Error reading config file %s: %s\n", configFile, err)
+			err = fmt.Errorf("Error reading config file %s: %s\n", configFile, err)
 		}
 	}
 
@@ -84,8 +90,9 @@ func Run(config Config, urlTpl UrlValues, endpoints helper.Endpoints) error {
 	}
 
 	url := bytes.NewBuffer(nil)
-	if err := urlTemplate.Execute(url, urlTpl); err != nil {
-		fmt.Errorf("Error building request URL: %s\n", err)
+	if err = urlTemplate.Execute(url, urlTpl); err != nil {
+		err = fmt.Errorf("Error building request URL: %s\n", err)
+		return
 	}
 
 	helper.LaunchBrowser(config.Open, url.String())
@@ -97,46 +104,57 @@ func Run(config Config, urlTpl UrlValues, endpoints helper.Endpoints) error {
 
 	tokResponse, err := endpoints.GetToken(urlTpl.ClientID, clientSecret, code)
 	if err != nil {
-		return fmt.Errorf("Error getting tokens: %s\n", err)
+		err = fmt.Errorf("Error getting tokens: %s\n", err)
+		return
 	}
 
 	email, err := endpoints.GetUserEmail(tokResponse.AccessToken)
 	if err != nil {
-		return fmt.Errorf("Error getting user email: %s\n", err)
+		err = fmt.Errorf("Error getting user email: %s\n", err)
+		return
 	}
 
+	authInfoName = fmt.Sprintf("%v%v", config.AuthInfoPrefix, email)
 	authInfo := helper.GenerateAuthInfo(urlTpl.ClientID, clientSecret, tokResponse.IdToken, tokResponse.RefreshToken)
 	k8sconfig := &clientcmdapi.Config{
-		AuthInfos: map[string]*clientcmdapi.AuthInfo{email: authInfo},
+		AuthInfos: map[string]*clientcmdapi.AuthInfo{authInfoName: authInfo},
 	}
 
 	if !config.Write {
 		fmt.Println("\n# Add the following to your ~/.kube/config")
 
-		json, err := k8s_runtime.Encode(clientcmdlatest.Codec, k8sconfig)
+		var json []byte
+		json, err = k8s_runtime.Encode(clientcmdlatest.Codec, k8sconfig)
 		if err != nil {
-			return fmt.Errorf("unexpected error: %v", err)
+			err = fmt.Errorf("unexpected error: %v", err)
+			return
 		}
-		output, err := yaml.JSONToYAML(json)
+		var output []byte
+		output, err = yaml.JSONToYAML(json)
 		if err != nil {
-			return fmt.Errorf("unexpected error: %v", err)
+			err = fmt.Errorf("unexpected error: %v", err)
+			return
 		}
 		fmt.Printf("%v", string(output))
-		return nil
+		return
 	}
 
-	tempKubeConfig, err := ioutil.TempFile("", "")
+	var tempKubeConfig *os.File
+	tempKubeConfig, err = ioutil.TempFile("", "")
 	if err != nil {
-		return fmt.Errorf("Could not create tempfile: %v", err)
+		err = fmt.Errorf("Could not create tempfile: %v", err)
+		return
 	}
 	defer os.Remove(tempKubeConfig.Name())
 	clientcmd.WriteToFile(*k8sconfig, tempKubeConfig.Name())
 
 	var kubeConfigPath string
 	if config.KubeconfigFile == "" {
-		usr, err := user.Current()
+		var usr *user.User
+		usr, err = user.Current()
 		if err != nil {
-			return fmt.Errorf("Could not determine current: %v", err)
+			err = fmt.Errorf("Could not determine current: %v", err)
+			return
 		}
 		kubeConfigPath = filepath.Join(usr.HomeDir, ".kube", "config")
 	} else {
@@ -148,10 +166,11 @@ func Run(config Config, urlTpl UrlValues, endpoints helper.Endpoints) error {
 	}
 	mergedConfig, err := loadingRules.Load()
 	if err != nil {
-		return fmt.Errorf("Could not merge configuration: %v", err)
+		err = fmt.Errorf("Could not merge configuration: %v", err)
+		return
 	}
 
 	clientcmd.WriteToFile(*mergedConfig, kubeConfigPath)
 	fmt.Printf("Configuration has been written to %s\n", kubeConfigPath)
-	return nil
+	return
 }
