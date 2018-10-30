@@ -30,6 +30,6 @@
   name = "gopkg.in/yaml.v2"
 
 [[constraint]]
-  version = "kubernetes-1.11"
+  version = "kubernetes-1.11.2"
   name = "k8s.io/apimachinery"
 
