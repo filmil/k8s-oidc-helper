@@ -176,11 +176,7 @@ func (c *codec) Encode(obj runtime.Object, w io.Writer) error {
 			}
 			targetGVK, ok := c.encodeVersion.KindForGroupVersionKinds([]schema.GroupVersionKind{objGVK})
 			if !ok {
-<<<<<<< HEAD
-				return runtime.NewNotRegisteredGVKErrForTarget(objGVK, c.encodeVersion)
-=======
 				return runtime.NewNotRegisteredGVKErrForTarget(c.originalSchemeName, objGVK, c.encodeVersion)
->>>>>>> Updates the deps to kubernetes-1.12.6
 			}
 			if targetGVK == objGVK {
 				return c.encoder.Encode(obj, w)

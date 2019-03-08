@@ -69,28 +69,6 @@ type Serializer struct {
 var _ runtime.Serializer = &Serializer{}
 var _ recognizer.RecognizingDecoder = &Serializer{}
 
-<<<<<<< HEAD
-func init() {
-	// Force jsoniter to decode number to interface{} via ints, if possible.
-	decodeNumberAsInt64IfPossible := func(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
-		switch iter.WhatIsNext() {
-		case jsoniter.NumberValue:
-			var number json.Number
-			iter.ReadVal(&number)
-			i64, err := strconv.ParseInt(string(number), 10, 64)
-			if err == nil {
-				*(*interface{})(ptr) = i64
-				return
-			}
-			f64, err := strconv.ParseFloat(string(number), 64)
-			if err == nil {
-				*(*interface{})(ptr) = f64
-				return
-			}
-			// Not much we can do here.
-		default:
-			*(*interface{})(ptr) = iter.Read()
-=======
 type customNumberExtension struct {
 	jsoniter.DummyExtension
 }
@@ -119,7 +97,6 @@ func (customNumberDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
 		if err == nil {
 			*(*interface{})(ptr) = f64
 			return
->>>>>>> Updates the deps to kubernetes-1.12.6
 		}
 		iter.ReportError("DecodeNumber", err.Error())
 	default:
@@ -131,20 +108,12 @@ func (customNumberDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
 // case-sensitive when unmarshalling, and otherwise compatible with
 // the encoding/json standard library.
 func CaseSensitiveJsonIterator() jsoniter.API {
-<<<<<<< HEAD
-	return jsoniter.Config{
-=======
 	config := jsoniter.Config{
->>>>>>> Updates the deps to kubernetes-1.12.6
 		EscapeHTML:             true,
 		SortMapKeys:            true,
 		ValidateJsonRawMessage: true,
 		CaseSensitive:          true,
 	}.Froze()
-<<<<<<< HEAD
-}
-
-=======
 	// Force jsoniter to decode number to interface{} via int64/float64, if possible.
 	config.RegisterExtension(&customNumberExtension{})
 	return config
@@ -154,7 +123,6 @@ func CaseSensitiveJsonIterator() jsoniter.API {
 // from outside. Still does not protect from package level jsoniter.Register*() functions - someone calling them
 // in some other library will mess with every usage of the jsoniter library in the whole program.
 // See https://github.com/json-iterator/go/issues/265
->>>>>>> Updates the deps to kubernetes-1.12.6
 var caseSensitiveJsonIterator = CaseSensitiveJsonIterator()
 
 // gvkWithDefaults returns group kind and version defaulting from provided default

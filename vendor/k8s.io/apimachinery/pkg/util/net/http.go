@@ -91,12 +91,8 @@ func SetOldTransportDefaults(t *http.Transport) *http.Transport {
 		// ProxierWithNoProxyCIDR allows CIDR rules in NO_PROXY
 		t.Proxy = NewProxierWithNoProxyCIDR(http.ProxyFromEnvironment)
 	}
-<<<<<<< HEAD
-	if t.DialContext == nil {
-=======
 	// If no custom dialer is set, use the default context dialer
 	if t.DialContext == nil && t.Dial == nil {
->>>>>>> Updates the deps to kubernetes-1.12.6
 		t.DialContext = defaultTransport.DialContext
 	}
 	if t.TLSHandshakeTimeout == 0 {
@@ -134,9 +130,6 @@ func DialerFor(transport http.RoundTripper) (DialFunc, error) {
 
 	switch transport := transport.(type) {
 	case *http.Transport:
-<<<<<<< HEAD
-		return transport.DialContext, nil
-=======
 		// transport.DialContext takes precedence over transport.Dial
 		if transport.DialContext != nil {
 			return transport.DialContext, nil
@@ -149,7 +142,6 @@ func DialerFor(transport http.RoundTripper) (DialFunc, error) {
 		}
 		// otherwise return nil
 		return nil, nil
->>>>>>> Updates the deps to kubernetes-1.12.6
 	case RoundTripperWrapper:
 		return DialerFor(transport.WrappedRoundTripper())
 	default:

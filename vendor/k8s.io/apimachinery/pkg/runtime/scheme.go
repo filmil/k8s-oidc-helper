@@ -22,15 +22,10 @@ import (
 	"reflect"
 	"strings"
 
-	"strings"
-
 	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-<<<<<<< HEAD
-=======
 	"k8s.io/apimachinery/pkg/util/naming"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
->>>>>>> Updates the deps to kubernetes-1.12.6
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -84,13 +79,10 @@ type Scheme struct {
 
 	// observedVersions keeps track of the order we've seen versions during type registration
 	observedVersions []schema.GroupVersion
-<<<<<<< HEAD
-=======
 
 	// schemeName is the name of this scheme.  If you don't specify a name, the stack of the NewScheme caller will be used.
 	// This is useful for error reporting to indicate the origin of the scheme.
 	schemeName string
->>>>>>> Updates the deps to kubernetes-1.12.6
 }
 
 // FieldLabelConversionFunc converts a field selector to internal representation.
@@ -106,10 +98,7 @@ func NewScheme() *Scheme {
 		fieldLabelConversionFuncs: map[schema.GroupVersionKind]FieldLabelConversionFunc{},
 		defaulterFuncs:            map[reflect.Type]func(interface{}){},
 		versionPriority:           map[string][]string{},
-<<<<<<< HEAD
-=======
 		schemeName:                naming.GetNameFromCallsite(internalPackages...),
->>>>>>> Updates the deps to kubernetes-1.12.6
 	}
 	s.converter = conversion.NewConverter(s.nameFunc)
 
@@ -755,8 +744,6 @@ func (s *Scheme) addObservedVersion(version schema.GroupVersion) {
 
 	s.observedVersions = append(s.observedVersions, version)
 }
-<<<<<<< HEAD
-=======
 
 func (s *Scheme) Name() string {
 	return s.schemeName
@@ -765,4 +752,3 @@ func (s *Scheme) Name() string {
 // internalPackages are packages that ignored when creating a default reflector name. These packages are in the common
 // call chains to NewReflector, so they'd be low entropy names for reflectors
 var internalPackages = []string{"k8s.io/apimachinery/pkg/runtime/scheme.go"}
->>>>>>> Updates the deps to kubernetes-1.12.6
